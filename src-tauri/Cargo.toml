@@ -1,0 +1,26 @@
+[package]
+name = "dropnet"
+version = "0.1.0"
+description = "Control de red por proceso para Windows"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "dropnet_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+embed-resource = "3"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.23"
+png = "0.18"
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+sysinfo = "0.33"
+uuid = { version = "1", features = ["v4", "serde"] }
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Storage_FileSystem", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+window-vibrancy = "0.8"
