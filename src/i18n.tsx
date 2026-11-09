@@ -1,8 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { logTranslations } from "./locales/logs";
+import { tableTranslations } from "./locales/table";
 
 const translations = {
   en: {
+    ...logTranslations.en,
+    ...tableTranslations.en,
     language: "Language",
     restoreBlockConfirmation: "Turn on block confirmations",
     confirmationsOff: "Confirmations off",
@@ -103,6 +107,8 @@ const translations = {
     startupRecoveryFailedDescription: "DropNet could not fully check or restore these saved executable paths:",
   },
   es: {
+    ...logTranslations.es,
+    ...tableTranslations.es,
     language: "Idioma",
     restoreBlockConfirmation: "Activar confirmaciones de bloqueo",
     confirmationsOff: "Confirmaciones desactivadas",

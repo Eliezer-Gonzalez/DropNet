@@ -5,6 +5,8 @@ import { useTranslation } from "../i18n";
 import { logFrontendError } from "../lib/logError";
 import type { ProcessRow, StartupRecoveryReport } from "../types";
 
+const SHOW_WINDOWS_REFRESH_DEBOUNCE_MS = 300;
+
 interface ExitPromptState {
   processes: ProcessRow[];
   checking: boolean;
@@ -15,18 +17,20 @@ interface ExitPromptState {
 interface Options {
   refresh: () => Promise<boolean>;
   showWindows: boolean;
+  appliedShowWindowsRef: React.MutableRefObject<boolean | null>;
   busyRef: React.MutableRefObject<boolean>;
   setBusyState: (value: boolean) => void;
   setMessage: (message: string) => void;
 }
 
-export function useSessionLifecycle({ refresh, showWindows, busyRef, setBusyState, setMessage }: Options) {
+export function useSessionLifecycle({ refresh, showWindows, appliedShowWindowsRef, busyRef, setBusyState, setMessage }: Options) {
   const { t, formatError } = useTranslation();
   const [exitPrompt, setExitPrompt] = useState<ExitPromptState | null>(null);
   const [startupRecovery, setStartupRecovery] = useState<StartupRecoveryReport | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const sessionInitializationRef = useRef<Promise<void> | null>(null);
-  const initializedShowWindowsRef = useRef(showWindows);
+  const latestShowWindowsRef = useRef(showWindows);
+  latestShowWindowsRef.current = showWindows;
   const exitUnblockInProgressRef = useRef(false);
   const allowCloseRef = useRef(false);
   const exitGenerationRef = useRef(0);
@@ -74,19 +78,22 @@ export function useSessionLifecycle({ refresh, showWindows, busyRef, setBusyStat
       try { recoveryReport = await invoke<StartupRecoveryReport>("initialize_session"); }
       catch (error) { void logFrontendError("recover_stale_firewall_rules", error); recoveryError = formatError(error); }
       await refresh();
-      initializedShowWindowsRef.current = showWindows;
       if (recoveryReport && (recoveryReport.stalePaths.length || recoveryReport.failures.length)) setStartupRecovery(recoveryReport);
       if (recoveryReport?.failures.length) recoveryError = t("startupRecoveryFailure", { detail: recoveryReport.failures.map(({ path, detail }) => `${path}: ${formatError(detail)}`).join("; ") });
       if (recoveryError) setMessage(recoveryError);
       setSessionReady(true);
-    })();
+    })().finally(() => setBusyState(false));
   }, [formatError, refresh, setBusyState, setMessage, showWindows, t]);
 
   useEffect(() => {
-    if (!sessionReady || initializedShowWindowsRef.current === showWindows) return;
-    initializedShowWindowsRef.current = showWindows;
-    void refresh();
-  }, [sessionReady, showWindows, refresh]);
+    if (!sessionReady || appliedShowWindowsRef.current === showWindows) return;
+    const requestedShowWindows = showWindows;
+    const refreshTimeout = window.setTimeout(() => {
+      if (latestShowWindowsRef.current !== requestedShowWindows || appliedShowWindowsRef.current === requestedShowWindows) return;
+      void refresh();
+    }, SHOW_WINDOWS_REFRESH_DEBOUNCE_MS);
+    return () => window.clearTimeout(refreshTimeout);
+  }, [appliedShowWindowsRef, sessionReady, showWindows, refresh]);
 
   useEffect(() => {
     const appWindow = getCurrentWindow();

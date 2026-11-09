@@ -18,3 +18,9 @@ export interface StartupRecoveryReport {
 }
 
 export type ProcessNode = ProcessRow & { children: ProcessNode[] };
+export type SortColumn = "name" | "pid" | "status";
+export type SortDirection = "ascending" | "descending";
+export interface ProcessSort {
+  column: SortColumn;
+  direction: SortDirection;
+}

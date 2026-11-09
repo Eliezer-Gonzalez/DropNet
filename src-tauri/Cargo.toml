@@ -1,8 +1,9 @@
 [package]
 name = "dropnet"
-version = "0.1.0"
+version = "0.3.1"
 description = "Control de red por proceso para Windows"
-authors = ["you"]
+authors = ["DestGM"]
+license = "GPL-3.0-only"
 edition = "2021"
 
 [lib]
@@ -24,3 +25,6 @@ sysinfo = "0.33"
 uuid = { version = "1", features = ["v4", "serde"] }
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Storage_FileSystem", "Win32_System_SystemInformation", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
 window-vibrancy = "0.8"
+
+[target.'cfg(windows)'.dependencies]
+tauri-plugin-single-instance = "2"

@@ -1,4 +1,4 @@
-import { FileCode2, RefreshCw, Search, ShieldAlert, ShieldCheck } from "lucide-react";
+import { FileCode2, FileText, RefreshCw, Search, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { ProcessRow } from "../types";
 import { useTranslation } from "../i18n";
 
@@ -10,11 +10,13 @@ interface Props {
   message: string;
   query: string;
   busy: boolean;
+  refreshing: boolean;
   onQueryChange: (value: string) => void;
   onRefresh: () => void;
+  onShowLogs: () => void;
 }
 
-export function DetailsPanel({ selected, blockedCount, processCount, admin, message, query, busy, onQueryChange, onRefresh }: Props) {
+export function DetailsPanel({ selected, blockedCount, processCount, admin, message, query, busy, refreshing, onQueryChange, onRefresh, onShowLogs }: Props) {
   const { t } = useTranslation();
   return <footer className="details-panel">
     <div className="details-main">
@@ -30,7 +32,8 @@ export function DetailsPanel({ selected, blockedCount, processCount, admin, mess
     </div>
     <div className="detail-tools">
       <div className="search-box detail-search-box"><Search size={14} aria-hidden="true" /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={t("searchProcesses")} aria-label={t("searchProcesses")} /></div>
-      <button className="command-button detail-refresh-button" disabled={busy} onClick={onRefresh}><RefreshCw size={14} /> {t("refresh")}</button>
+      <button className="command-button detail-refresh-button" aria-busy={refreshing} disabled={busy || refreshing} onClick={onRefresh}><RefreshCw size={14} className={refreshing ? "refresh-spinning" : undefined} /> {refreshing ? t("refreshingProcesses") : t("refresh")}</button>
+      <button className="command-button detail-refresh-button" onClick={onShowLogs}><FileText size={14} /> {t("logs")}</button>
     </div>
     <div className="detail-note">{t("restartHint")}</div>
     <div className="detail-recovery-note">{t("recoveryHint")}</div>

@@ -36,6 +36,13 @@ pub fn log_frontend_error(operation: String, detail: String) {
 }
 
 #[tauri::command]
+pub async fn read_logs() -> Result<crate::logging::LogSnapshot, String> {
+    tauri::async_runtime::spawn_blocking(crate::logging::read_logs)
+        .await
+        .map_err(|error| format!("Could not read DropNet logs: {error}"))?
+}
+
+#[tauri::command]
 pub fn is_admin() -> bool {
     #[cfg(windows)]
     unsafe {

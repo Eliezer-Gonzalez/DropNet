@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BellOff, Copy, Minus, Square, X, WifiOff } from "lucide-react";
 import { useTranslation } from "../i18n";
@@ -15,6 +16,17 @@ export function TitleBar({ blockConfirmationDisabled, onEnableBlockConfirmation 
   const { language, setLanguage, t } = useTranslation();
   const [window] = useState(() => getCurrentWindow());
   const [isMaximized, setIsMaximized] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    void getVersion().then((version) => {
+      if (!disposed) setAppVersion(version);
+    }).catch((error) => {
+      void logFrontendError("load_app_version", error);
+    });
+    return () => { disposed = true; };
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -51,6 +63,7 @@ export function TitleBar({ blockConfirmationDisabled, onEnableBlockConfirmation 
     <div className="title">
       <WifiOff size={17} strokeWidth={2.2} aria-hidden="true" />
       <span>DropNet</span>
+      {appVersion && <span className="title-version">v{appVersion}</span>}
     </div>
     <label className="language-picker">
       <span>{t("language")}:</span>

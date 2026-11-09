@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DropNet",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "identifier": "com.dropnet.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
   "app": {

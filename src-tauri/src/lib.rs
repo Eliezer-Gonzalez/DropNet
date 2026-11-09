@@ -12,7 +12,33 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+
+    #[cfg(windows)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Some(window) = app.get_webview_window("main") {
+            if let Err(error) = window.unminimize() {
+                logging::warn(
+                    "single_instance",
+                    &format!("Could not restore the main window: {error}"),
+                );
+            }
+            if let Err(error) = window.show() {
+                logging::warn(
+                    "single_instance",
+                    &format!("Could not show the main window: {error}"),
+                );
+            }
+            if let Err(error) = window.set_focus() {
+                logging::warn(
+                    "single_instance",
+                    &format!("Could not focus the main window: {error}"),
+                );
+            }
+        }
+    }));
+
+    builder
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             match logging::initialize(app.handle()) {
@@ -42,7 +68,8 @@ pub fn run() {
             commands::remove_entry,
             commands::set_blocked,
             commands::unblock_all,
-            commands::log_frontend_error
+            commands::log_frontend_error,
+            commands::read_logs
         ])
         .run(tauri::generate_context!())
         .expect("error while running DropNet");

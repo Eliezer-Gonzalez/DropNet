@@ -7,6 +7,7 @@ import { BlockConfirmationModal } from "./components/BlockConfirmationModal";
 import { CommandBar } from "./components/CommandBar";
 import { DetailsPanel } from "./components/DetailsPanel";
 import { ExitConfirmationModal } from "./components/ExitConfirmationModal";
+import { LogsModal } from "./components/LogsModal";
 import { StartupRecoveryModal } from "./components/StartupRecoveryModal";
 import { ProcessContextMenu } from "./components/ProcessContextMenu";
 import { ProcessTable } from "./components/ProcessTable";
@@ -15,6 +16,7 @@ import { TooltipLayer } from "./components/TooltipLayer";
 import { buildProcessTree } from "./lib/processTree";
 import { useTranslation } from "./i18n";
 import { logFrontendError } from "./lib/logError";
+import { finishMinimumLoadingTime } from "./lib/minimumLoadingTime";
 import { useSessionLifecycle } from "./hooks/useSessionLifecycle";
 import type { ProcessNode, ProcessRow } from "./types";
 
@@ -25,46 +27,76 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [showWindows, setShowWindows] = useState(false);
+  const showWindowsRef = useRef(showWindows);
+  showWindowsRef.current = showWindows;
+  const appliedShowWindowsRef = useRef<boolean | null>(null);
   const [admin, setAdmin] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [refreshingProcesses, setRefreshingProcesses] = useState(false);
   const [message, setMessage] = useState(() => t("ready"));
   const [contextTarget, setContextTarget] = useState<ProcessNode | null>(null);
+  const [logsOpen, setLogsOpen] = useState(false);
   const [contextPosition, setContextPosition] = useState<{ x: number; y: number } | null>(null);
   const [pendingBlock, setPendingBlock] = useState<ProcessRow | null>(null);
   const processesRef = useRef<ProcessRow[]>([]);
   const processStateLoadedRef = useRef(false);
   const busyRef = useRef(false);
+  const refreshSequenceRef = useRef(0);
   const [skipBlockConfirmation, setSkipBlockConfirmation] = useState(() => {
     try { return localStorage.getItem("dropnet.skipBlockConfirmation") === "true"; }
     catch { return false; }
   });
 
-  const setBusyState = (value: boolean) => {
-    busyRef.current = value;
-    setBusy(value);
-  };
+  const operationBusyRef = useRef(false);
+  const activeRefreshCountRef = useRef(0);
+  const syncBusyState = useCallback(() => {
+    const nextBusy = operationBusyRef.current || activeRefreshCountRef.current > 0;
+    busyRef.current = nextBusy;
+    setBusy(nextBusy);
+  }, []);
+  const setBusyState = useCallback((value: boolean) => {
+    operationBusyRef.current = value;
+    syncBusyState();
+  }, [syncBusyState]);
 
   const refresh = useCallback(async (): Promise<boolean> => {
-    setBusyState(true);
+    const requestId = ++refreshSequenceRef.current;
+    const requestedShowWindows = showWindowsRef.current;
+    const isCurrentRequest = () => requestId === refreshSequenceRef.current && requestedShowWindows === showWindowsRef.current;
+    const startedAt = performance.now();
+    activeRefreshCountRef.current += 1;
+    setRefreshingProcesses(true);
+    syncBusyState();
     try {
-      const rows = await invoke<ProcessRow[]>("list_processes", { showWindows });
+      const rows = await invoke<ProcessRow[]>("list_processes", { showWindows: requestedShowWindows });
+      if (!isCurrentRequest()) return false;
+      const isAdmin = await invoke<boolean>("is_admin");
+      if (!isCurrentRequest()) return false;
       processesRef.current = rows;
       processStateLoadedRef.current = true;
       setProcesses(rows);
       setSelectedKey((current) => current !== null && rows.some((row) => row.key === current) ? current : null);
-      setAdmin(await invoke<boolean>("is_admin"));
+      setAdmin(isAdmin);
       setMessage(t("listUpdated"));
+      appliedShowWindowsRef.current = requestedShowWindows;
       return true;
     } catch (error) {
+      if (!isCurrentRequest()) return false;
       void logFrontendError("refresh_process_list", error);
       setMessage(formatError(error));
       return false;
-    } finally { setBusyState(false); }
-  }, [showWindows, t, formatError]);
+    } finally {
+      await finishMinimumLoadingTime(startedAt);
+      activeRefreshCountRef.current = Math.max(0, activeRefreshCountRef.current - 1);
+      setRefreshingProcesses(activeRefreshCountRef.current > 0);
+      syncBusyState();
+    }
+  }, [t, formatError, syncBusyState]);
 
   const { exitPrompt, startupRecovery, exitUnblockInProgressRef, checkBeforeExit, cancelExit, confirmExit, closeStartupRecovery } = useSessionLifecycle({
     refresh,
     showWindows,
+    appliedShowWindowsRef,
     busyRef,
     setBusyState,
     setMessage,
@@ -213,12 +245,13 @@ export default function App() {
       {admin === false && <div className="admin-banner"><AlertTriangle size={15} /><span>{t("adminWarning")}</span></div>}
       <CommandBar selected={Boolean(selected?.path)} selectedBlocked={selected?.blocked ?? false} selectedTracked={selected?.tracked ?? false} admin={admin} blockedCount={blockedCount} filter={filter} showWindows={showWindows} busy={busy} onFilterChange={setFilter} onShowWindowsChange={setShowWindows} onBlock={() => requestBlock()} onUnblock={() => void setBlocked(false)} onUnblockAll={() => void unblockAll()} onAdd={() => void addExecutable()} onRemove={() => void removeSelected()} />
       <ProcessTable nodes={tree} selectedKey={selectedKey} onSelect={selectProcess} onOpenContextMenu={openContextMenu} />
-      <DetailsPanel selected={selected} blockedCount={blockedCount} processCount={processes.filter((process) => process.running).length} admin={admin} message={message} query={query} busy={busy} onQueryChange={setQuery} onRefresh={() => void refresh()} />
+      <DetailsPanel selected={selected} blockedCount={blockedCount} processCount={processes.filter((process) => process.running).length} admin={admin} message={message} query={query} busy={busy} refreshing={refreshingProcesses} onQueryChange={setQuery} onRefresh={() => void refresh()} onShowLogs={() => setLogsOpen(true)} />
     </section>
     {contextTarget && contextPosition && <ProcessContextMenu process={contextTarget} position={contextPosition} admin={admin} busy={busy} onBlock={() => requestBlock(contextTarget)} onUnblock={() => void setBlocked(false, contextTarget)} onClose={closeContextMenu} />}
     {pendingBlock && <BlockConfirmationModal process={pendingBlock} onCancel={() => setPendingBlock(null)} onConfirm={confirmBlock} />}
     {exitPrompt && <ExitConfirmationModal processes={exitPrompt.processes} checking={exitPrompt.checking} busy={exitPrompt.busy} error={exitPrompt.error} onCancel={cancelExit} onRetry={() => void checkBeforeExit()} onConfirm={() => void confirmExit()} />}
     {startupRecovery && <StartupRecoveryModal report={startupRecovery} onClose={closeStartupRecovery} />}
+    {logsOpen && <LogsModal onClose={() => setLogsOpen(false)} />}
     <TooltipLayer />
   </main>;
 }
