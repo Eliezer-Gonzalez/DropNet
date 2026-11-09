@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ShieldCheck, ShieldOff } from "lucide-react";
 import type { ProcessNode } from "../types";
+import { useTranslation } from "../i18n";
 
 interface Props {
   process: ProcessNode;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ProcessContextMenu({ process, position, admin, busy, onBlock, onUnblock, onClose }: Props) {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const blocked = process.blocked;
   const disabled = !process.path || !admin || busy;
@@ -35,10 +37,10 @@ export function ProcessContextMenu({ process, position, admin, busy, onBlock, on
     };
   }, [onClose]);
 
-  return <div ref={menuRef} className="process-context-menu" role="menu" tabIndex={-1} style={{ left: Math.max(8, left), top: Math.max(8, top) }} aria-label={`Acciones para ${process.name}`}>
+  return <div ref={menuRef} className="process-context-menu" role="menu" tabIndex={-1} style={{ left: Math.max(8, left), top: Math.max(8, top) }} aria-label={t("contextActions", { name: process.name })}>
     <button type="button" role="menuitem" disabled={disabled} onClick={() => { (blocked ? onUnblock : onBlock)(); onClose(); }}>
       {blocked ? <ShieldCheck size={15} /> : <ShieldOff size={15} />}
-      {blocked ? "Restaurar acceso a internet" : "Cortar acceso a internet"}
+      {blocked ? t("restoreInternetContext") : t("blockInternetContext")}
     </button>
   </div>;
 }

@@ -4,3 +4,7 @@ src-tauri/target
 src-tauri/gen/schemas
 checkpoints/
 *.log
+
+# Local Codex skill installations
+/.agents/
+/skills-lock.json

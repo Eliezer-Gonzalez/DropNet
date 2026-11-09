@@ -11,4 +11,10 @@ export interface ProcessRow {
   running: boolean;
 }
 
+export interface StartupRecoveryReport {
+  stalePaths: string[];
+  restoredPaths: string[];
+  failures: Array<{ path: string; detail: string }>;
+}
+
 export type ProcessNode = ProcessRow & { children: ProcessNode[] };

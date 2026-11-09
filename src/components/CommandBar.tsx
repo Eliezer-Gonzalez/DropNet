@@ -1,4 +1,5 @@
 import { ShieldOff, ShieldCheck, ShieldX, Plus, Eye, Trash2 } from "lucide-react";
+import { useTranslation } from "../i18n";
 
 interface Props {
   selected: boolean;
@@ -19,17 +20,18 @@ interface Props {
 }
 
 export function CommandBar(props: Props) {
+  const { t } = useTranslation();
   return <div className="command-bar">
-    <button className="command-button" disabled={!props.selected || props.selectedBlocked || props.busy || !props.admin} onClick={props.onBlock}><ShieldOff size={14} /> Cortar internet</button>
-    <button className="command-button" disabled={!props.selected || !props.selectedBlocked || props.busy || !props.admin} onClick={props.onUnblock}><ShieldCheck size={14} /> Restaurar</button>
-    <button className="command-button" disabled={props.blockedCount === 0 || props.busy || !props.admin} onClick={props.onUnblockAll}><ShieldX size={14} /> Restaurar todo</button>
-    <button className="command-button" disabled={!props.selectedTracked || props.busy || !props.admin} onClick={props.onRemove}><Trash2 size={14} /> Quitar</button>
-    <button className="command-button add-button" disabled={props.busy} onClick={props.onAdd}><Plus size={14} /> Agregar .exe</button>
+    <button className="command-button" disabled={!props.selected || props.selectedBlocked || props.busy || !props.admin} onClick={props.onBlock}><ShieldOff size={14} /> {t("cutInternet")}</button>
+    <button className="command-button" disabled={!props.selected || !props.selectedBlocked || props.busy || !props.admin} onClick={props.onUnblock}><ShieldCheck size={14} /> {t("restoreInternet")}</button>
+    <button className="command-button" disabled={props.blockedCount === 0 || props.busy || !props.admin} onClick={props.onUnblockAll}><ShieldX size={14} /> {t("restoreAll")}</button>
+    <button className="command-button" disabled={!props.selectedTracked || props.busy || !props.admin} onClick={props.onRemove}><Trash2 size={14} /> {t("remove")}</button>
+    <button className="command-button add-button" disabled={props.busy} onClick={props.onAdd}><Plus size={14} /> {t("addExe")}</button>
     <span className="command-spacer" />
-    <label className="filter-label" htmlFor="process-filter">Mostrar:</label>
+    <label className="filter-label" htmlFor="process-filter">{t("show")}</label>
     <select id="process-filter" value={props.filter} onChange={(event) => props.onFilterChange(event.target.value)}>
-      <option value="all">Todos</option><option value="online">Con internet</option><option value="blocked">Bloqueados</option>
+      <option value="all">{t("all")}</option><option value="online">{t("online")}</option><option value="blocked">{t("blocked")}</option>
     </select>
-    <label className="show-windows"><input type="checkbox" checked={props.showWindows} onChange={(event) => props.onShowWindowsChange(event.target.checked)} /><Eye size={13} /> Windows</label>
+    <label className="show-windows"><input type="checkbox" checked={props.showWindows} onChange={(event) => props.onShowWindowsChange(event.target.checked)} /><Eye size={13} /> {t("windows")}</label>
   </div>;
 }

@@ -25,14 +25,13 @@ pub fn load(app: &tauri::AppHandle) -> Result<Vec<Entry>, String> {
     }
     let contents = fs::read_to_string(file).map_err(|error| error.to_string())?;
     serde_json::from_str(&contents)
-        .map_err(|error| format!("No se pudieron leer los programas guardados: {error}"))
+        .map_err(|error| format!("Could not read saved programs: {error}"))
 }
 
 fn save(app: &tauri::AppHandle, entries: &[Entry]) -> Result<(), String> {
     let file = data_file(app)?;
     let contents = serde_json::to_string_pretty(entries).map_err(|error| error.to_string())?;
-    fs::write(file, contents)
-        .map_err(|error| format!("No se pudieron guardar los programas: {error}"))
+    fs::write(file, contents).map_err(|error| format!("Could not save programs: {error}"))
 }
 
 pub fn add(app: &tauri::AppHandle, path: String) -> Result<(), String> {
@@ -41,7 +40,7 @@ pub fn add(app: &tauri::AppHandle, path: String) -> Result<(), String> {
         .iter()
         .any(|entry| entry.path.eq_ignore_ascii_case(&path))
     {
-        return Ok(());
+        return Err("This executable is already in the list.".into());
     }
     entries.push(Entry {
         id: Uuid::new_v4().to_string(),
@@ -67,16 +66,14 @@ pub fn ensure(app: &tauri::AppHandle, path: String) -> Result<Entry, String> {
     Ok(entry)
 }
 
-pub fn remove(app: &tauri::AppHandle, path: &str, delete_rules: bool) -> Result<(), String> {
+pub fn find_by_path(app: &tauri::AppHandle, path: &str) -> Result<Option<Entry>, String> {
+    Ok(load(app)?
+        .into_iter()
+        .find(|entry| entry.path.eq_ignore_ascii_case(path)))
+}
+
+pub fn remove_by_id(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
     let mut entries = load(app)?;
-    if let Some(entry) = entries
-        .iter()
-        .find(|entry| entry.path.eq_ignore_ascii_case(path))
-    {
-        if delete_rules {
-            crate::firewall::unblock(&entry.id)?;
-        }
-    }
-    entries.retain(|entry| !entry.path.eq_ignore_ascii_case(path));
+    entries.retain(|entry| entry.id != id);
     save(app, &entries)
 }

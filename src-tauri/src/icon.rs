@@ -93,7 +93,11 @@ pub fn executable_icon(path: &str) -> Option<String> {
             for pixel in bgra.chunks_exact(4) {
                 let alpha = if has_alpha { pixel[3] } else { 255 };
                 let unpremultiply = |channel: u8| {
-                    if alpha == 0 { 0 } else { ((channel as u16 * 255 / alpha as u16).min(255)) as u8 }
+                    if alpha == 0 {
+                        0
+                    } else {
+                        ((channel as u16 * 255 / alpha as u16).min(255)) as u8
+                    }
                 };
                 rgba.extend_from_slice(&[
                     unpremultiply(pixel[2]),

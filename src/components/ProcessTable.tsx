@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { ProcessTree } from "./ProcessTree";
 import type { ProcessNode } from "../types";
+import { useTranslation } from "../i18n";
 
 interface Props {
   nodes: ProcessNode[];
@@ -15,6 +16,7 @@ type ResizableColumn = "name" | "path";
 const MIN_WIDTHS: Record<ResizableColumn, number> = { name: 140, path: 160 };
 
 export function ProcessTable({ nodes, selectedKey, onSelect, onOpenContextMenu }: Props) {
+  const { t } = useTranslation();
   const [widths, setWidths] = useState({ name: 320, path: 440 });
   const dragRef = useRef<{ column: ResizableColumn; startX: number; startWidth: number } | null>(null);
 
@@ -40,10 +42,10 @@ export function ProcessTable({ nodes, selectedKey, onSelect, onOpenContextMenu }
 
   return <div className="process-table" style={style}>
     <div className="list-heading">
-      <span>Proceso<button className="column-resizer" aria-label="Cambiar ancho de Proceso" onPointerDown={(event) => startResize(event, "name")} onPointerMove={resize} onPointerUp={stopResize} /></span>
+      <span>{t("processColumn")}<button className="column-resizer" aria-label={t("resizeProcess")} onPointerDown={(event) => startResize(event, "name")} onPointerMove={resize} onPointerUp={stopResize} /></span>
       <span>PID</span>
-      <span>Ubicación del ejecutable<button className="column-resizer" aria-label="Cambiar ancho de Ubicación del ejecutable" onPointerDown={(event) => startResize(event, "path")} onPointerMove={resize} onPointerUp={stopResize} /></span>
-      <span>Estado</span>
+      <span>{t("pathColumn")}<button className="column-resizer" aria-label={t("resizePath")} onPointerDown={(event) => startResize(event, "path")} onPointerMove={resize} onPointerUp={stopResize} /></span>
+      <span>{t("stateColumn")}</span>
     </div>
     <ProcessTree nodes={nodes} selectedKey={selectedKey} onSelect={onSelect} onOpenContextMenu={onOpenContextMenu} />
   </div>;

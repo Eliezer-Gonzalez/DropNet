@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Copy, Minus, Square, X, WifiOff } from "lucide-react";
+import { BellOff, Copy, Minus, Square, X, WifiOff } from "lucide-react";
+import { useTranslation } from "../i18n";
+import type { Language } from "../i18n";
+import { logFrontendError } from "../lib/logError";
 
-export function TitleBar() {
+interface Props {
+  blockConfirmationDisabled: boolean;
+  onEnableBlockConfirmation: () => void;
+}
+
+export function TitleBar({ blockConfirmationDisabled, onEnableBlockConfirmation }: Props) {
+  const { language, setLanguage, t } = useTranslation();
   const [window] = useState(() => getCurrentWindow());
   const [isMaximized, setIsMaximized] = useState(false);
 
@@ -31,15 +41,29 @@ export function TitleBar() {
     setIsMaximized(await window.isMaximized());
   };
 
-  return <header className="titlebar" data-tauri-drag-region="deep">
-    <div className="title" data-tauri-drag-region>
+  const startWindowDrag = (event: ReactMouseEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
+    if (event.target instanceof Element && event.target.closest(".window-controls, button, a, input, select, textarea")) return;
+    void window.startDragging().catch((error) => { void logFrontendError("move_window", error); });
+  };
+
+  return <header className="titlebar" onMouseDown={startWindowDrag}>
+    <div className="title">
       <WifiOff size={17} strokeWidth={2.2} aria-hidden="true" />
       <span>DropNet</span>
     </div>
-    <nav className="window-controls" data-tauri-drag-region="false" aria-label="Controles de ventana">
-      <button type="button" className="window-button" aria-label="Minimizar" onClick={() => void window.minimize()}><Minus size={13} /></button>
-      <button type="button" className="window-button" aria-label={isMaximized ? "Restaurar" : "Maximizar"} title={isMaximized ? "Restaurar" : "Maximizar"} onClick={() => void toggleMaximize()}>{isMaximized ? <Copy size={11} /> : <Square size={11} />}</button>
-      <button type="button" className="window-button close-button" aria-label="Cerrar" onClick={() => void window.close()}><X size={14} /></button>
+    <label className="language-picker">
+      <span>{t("language")}:</span>
+      <select aria-label={t("language")} value={language} onChange={(event) => setLanguage(event.target.value as Language)}>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </label>
+    {blockConfirmationDisabled && <button type="button" className="confirmation-setting-button" data-tooltip={t("restoreBlockConfirmation")} aria-label={t("restoreBlockConfirmation")} onClick={onEnableBlockConfirmation}><BellOff size={14} /> {t("confirmationsOff")}</button>}
+    <nav className="window-controls" aria-label={t("windowControls")}>
+      <button type="button" className="window-button" aria-label={t("minimize")} onClick={() => void window.minimize()}><Minus size={13} /></button>
+      <button type="button" className="window-button" aria-label={isMaximized ? t("restore") : t("maximize")} data-tooltip={isMaximized ? t("restore") : t("maximize")} onClick={() => void toggleMaximize()}>{isMaximized ? <Copy size={11} /> : <Square size={11} />}</button>
+      <button type="button" className="window-button close-button" aria-label={t("close")} onClick={() => void window.close()}><X size={14} /></button>
     </nav>
   </header>;
 }
