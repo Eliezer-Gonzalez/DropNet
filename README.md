@@ -9,26 +9,26 @@
 
 **A small Windows utility for one job: block or restore internet access for a selected executable.**
 
-DropNet is an individual project by **DestGM**. I made it to test programs I build without disconnecting the rest of my computer from the internet. It is intentionally limited in scope; it does not try to manage bandwidth, inspect traffic, or replace a general firewall manager.
+I made this personal tool to test programs I build without disconnecting the rest of my computer from the internet. It is intentionally limited in scope; it does not try to manage bandwidth, inspect traffic, or replace a general firewall manager.
 
 ## What it does
 
 - Lists running processes in a parent/child tree and lets you choose an executable.
 - Sorts process names, PIDs, and network status from the column headings while keeping parent/child groups intact.
 - Adds Windows Defender Firewall block rules for that executable in both inbound and outbound directions, or removes DropNet's rules to restore access.
-- Uses the executable path as the rule target. A child process running from another .exe needs its own rule.
+- Uses the executable path as the rule target. Child processes using the same .exe are covered by that rule; a child using a different .exe needs its own rule.
 - Checks Firewall state instead of treating the saved process list as proof that a block is active.
 - Tries to remove saved DropNet rules when the app starts after an unexpected shutdown. Windows may keep rules active until DropNet starts again.
 - Keeps local diagnostic logs, rotates old log files, and includes a small in-app log viewer.
 
-DropNet does **not** disconnect the whole computer, install a driver, filter folders or wildcards, or automatically block every child process.
+DropNet does **not** disconnect the whole computer, install a driver, filter folders or wildcards, or automatically block child processes that use a different .exe.
 
 ## Important behavior
 
-- Administrator permissions are required to change Windows Firewall rules. For development, open the terminal as administrator before starting DropNet.
-- Firewall changes commonly affect new connections. Restart the target program after blocking or restoring access.
+- **Administrator permissions are required to change Windows Firewall rules.** For development, open the terminal as administrator before starting DropNet.
+- Blocking can affect traffic immediately, including traffic from a program that is already open. Content already downloaded or cached may remain visible, while later requests can fail. Restart the target program when you want to test from a clean state.
 - If DropNet or Windows stops unexpectedly, Windows Firewall can keep the rules. Start DropNet again so it can attempt recovery, or remove the rules from DropNet.
-- Blocking a parent executable affects processes using that exact executable path. Separate child executables are separate targets.
+- Blocking an executable affects every process instance using that exact .exe path, including child processes that use the same executable. A child process running a different .exe is a separate target.
 - This is a personal testing utility, not a security boundary or a replacement for Windows Firewall management.
 
 ## Build from source
@@ -64,26 +64,26 @@ Copyright © 2026 DestGM.
 
 **Una pequeña herramienta para Windows que hace una sola tarea: bloquear o restablecer el acceso a internet de un ejecutable seleccionado.**
 
-DropNet es un proyecto individual de **DestGM**. Lo hice para probar los programas que desarrollo sin desconectar de internet al resto del computador. Su alcance es deliberadamente acotado: no administra el ancho de banda, no inspecciona el tráfico y no reemplaza un administrador general del Firewall.
+Hice esta herramienta personal para probar los programas que desarrollo sin desconectar de internet al resto del computador. Su alcance es deliberadamente acotado: no administra el ancho de banda, no inspecciona el tráfico y no reemplaza un administrador general del Firewall.
 
 ## Qué hace
 
 - Muestra los procesos en ejecución como un árbol de procesos padre e hijos para elegir un ejecutable.
 - Permite ordenar los nombres, PID y estados desde los encabezados de las columnas sin separar los grupos padre e hijo.
 - Crea reglas de bloqueo del Firewall de Windows Defender para el ejecutable seleccionado, tanto de entrada como de salida, o elimina las reglas de DropNet para restablecer el acceso.
-- Usa la ruta del ejecutable como destino de la regla. Si un proceso hijo usa otro archivo .exe, hay que agregarlo por separado.
+- Usa la ruta del ejecutable como destino de la regla. Los procesos hijos que usan el mismo .exe quedan cubiertos por la regla; si un hijo usa otro .exe, hay que agregarlo por separado.
 - Consulta el estado real del Firewall; la lista guardada no se considera prueba de que un bloqueo siga activo.
 - Al iniciar después de un cierre inesperado, intenta quitar las reglas guardadas de DropNet. Windows puede conservarlas hasta que DropNet se vuelva a iniciar.
 - Guarda registros de diagnóstico localmente, rota los archivos antiguos e incluye un visor dentro de la aplicación.
 
-DropNet **no** desconecta todo el computador, no instala controladores, no filtra carpetas ni comodines, y no bloquea automáticamente cada proceso hijo.
+DropNet **no** desconecta todo el computador, no instala controladores, no filtra carpetas ni comodines, y no bloquea automáticamente los procesos hijos que usan otro .exe.
 
 ## Comportamiento importante
 
-- Se necesitan permisos de administrador para cambiar las reglas del Firewall de Windows. Para desarrollo, abre la terminal como administrador antes de iniciar DropNet.
-- Los cambios del Firewall suelen afectar conexiones nuevas. Reinicia el programa de destino después de bloquear o restablecer el acceso.
+- **Se necesitan permisos de administrador para cambiar las reglas del Firewall de Windows.** Para desarrollo, abre la terminal como administrador antes de iniciar DropNet.
+- El bloqueo puede afectar el tráfico de inmediato, incluso en un programa que ya está abierto. El contenido descargado o guardado en caché puede seguir visible, mientras que las solicitudes posteriores pueden fallar. Reinicia el programa si quieres probar desde un estado limpio.
 - Si DropNet o Windows se detiene inesperadamente, Windows Firewall puede conservar las reglas. Inicia DropNet otra vez para que intente recuperarse, o quita las reglas desde DropNet.
-- El bloqueo de un ejecutable padre afecta a los procesos que usan esa misma ruta. Los ejecutables hijos con otra ruta son destinos separados.
+- El bloqueo de un ejecutable afecta a todos los procesos que usan la misma ruta del .exe, incluidos los procesos hijos que ejecutan ese mismo archivo. Un proceso hijo que ejecuta otro .exe es un destino separado.
 - Esta herramienta personal de pruebas no es una frontera de seguridad ni un reemplazo de la administración del Firewall de Windows.
 
 ## Compilar desde el código fuente
