@@ -78,7 +78,7 @@ export function useSessionLifecycle({ refresh, showWindows, appliedShowWindowsRe
       try { recoveryReport = await invoke<StartupRecoveryReport>("initialize_session"); }
       catch (error) { void logFrontendError("recover_stale_firewall_rules", error); recoveryError = formatError(error); }
       await refresh();
-      if (recoveryReport && (recoveryReport.stalePaths.length || recoveryReport.failures.length)) setStartupRecovery(recoveryReport);
+      if (recoveryReport && (recoveryReport.configurationRecovered || recoveryReport.stalePaths.length || recoveryReport.failures.length)) setStartupRecovery(recoveryReport);
       if (recoveryReport?.failures.length) recoveryError = t("startupRecoveryFailure", { detail: recoveryReport.failures.map(({ path, detail }) => `${path}: ${formatError(detail)}`).join("; ") });
       if (recoveryError) setMessage(recoveryError);
       setSessionReady(true);

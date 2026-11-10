@@ -217,17 +217,36 @@ export default function App() {
 
   const unblockAll = async () => {
     setBusyState(true);
-    try { await invoke("unblock_all"); setMessage(t("rulesRemoved")); await refresh(); }
-    catch (error) { void logFrontendError("unblock_all", error); setMessage(formatError(error)); }
-    finally { setBusyState(false); }
+    let operationError: string | null = null;
+    try {
+      await invoke("unblock_all");
+      setMessage(t("rulesRemoved"));
+    } catch (error) {
+      void logFrontendError("unblock_all", error);
+      operationError = formatError(error);
+    } finally {
+      await refresh();
+      if (operationError) setMessage(operationError);
+      setBusyState(false);
+    }
   };
 
   const removeSelected = async () => {
     if (!selected?.path) return;
     setBusyState(true);
-    try { await invoke("remove_entry", { path: selected.path }); setSelectedKey(null); setMessage(t("programRemoved")); await refresh(); }
-    catch (error) { void logFrontendError("remove_entry", error); setMessage(formatError(error)); }
-    finally { setBusyState(false); }
+    let operationError: string | null = null;
+    try {
+      await invoke("remove_entry", { path: selected.path });
+      setSelectedKey(null);
+      setMessage(t("programRemoved"));
+    } catch (error) {
+      void logFrontendError("remove_entry", error);
+      operationError = formatError(error);
+    } finally {
+      await refresh();
+      if (operationError) setMessage(operationError);
+      setBusyState(false);
+    }
   };
 
   const selectProcess = (process: ProcessNode) => setSelectedKey(process.key);

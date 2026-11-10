@@ -4,7 +4,7 @@
 ![Tauri 2](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
 ![Rust](https://img.shields.io/badge/backend-Rust-DEA584?logo=rust&logoColor=black)
-![Version](https://img.shields.io/badge/version-0.3.1-blue)
+![Version](https://img.shields.io/badge/version-0.3.2-blue)
 ![GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)
 
 **A small Windows utility for one job: block or restore internet access for a selected executable.**

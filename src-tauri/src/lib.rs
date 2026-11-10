@@ -1,8 +1,10 @@
+mod atomic_file;
 mod commands;
 mod firewall;
 mod icon;
 mod log_privacy;
 mod logging;
+mod path_policy;
 mod process;
 mod process_service;
 mod recovery;

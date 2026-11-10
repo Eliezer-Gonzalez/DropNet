@@ -11,12 +11,17 @@ export function StartupRecoveryModal({ report, onClose }: Props) {
   const { t, formatError } = useTranslation();
   const hasRestoredPaths = report.restoredPaths.length > 0;
   const hasFailures = report.failures.length > 0;
+  const title = hasFailures
+    ? "startupRecoveryFailureTitle"
+    : report.configurationRecovered
+      ? "startupConfigurationRecoveryTitle"
+      : "startupRecoveryTitle";
 
   return <div className="modal-backdrop">
     <section className={`block-confirmation-modal startup-recovery-modal${hasFailures ? " has-failures" : ""}`} role="dialog" aria-modal="true" aria-labelledby="startup-recovery-title">
       <div className="block-modal-heading">
         {hasFailures ? <AlertTriangle size={22} aria-hidden="true" /> : <CheckCircle2 size={22} aria-hidden="true" />}
-        <h2 id="startup-recovery-title">{t(hasFailures ? "startupRecoveryFailureTitle" : "startupRecoveryTitle")}</h2>
+        <h2 id="startup-recovery-title">{t(title)}</h2>
       </div>
       {hasRestoredPaths && <>
         <p className="block-modal-scope">{t("startupRecoveryDescription")}</p>
@@ -24,6 +29,7 @@ export function StartupRecoveryModal({ report, onClose }: Props) {
           {report.restoredPaths.map((path) => <li key={path}><code>{path}</code></li>)}
         </ul>
       </>}
+      {report.configurationRecovered && <p className="block-modal-scope">{t("startupConfigurationRecovered")}</p>}
       {report.failures.length > 0 && <>
         <p className="block-modal-scope">{t("startupRecoveryFailedDescription")}</p>
         <ul className="startup-recovery-list">

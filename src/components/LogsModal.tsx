@@ -11,6 +11,7 @@ interface LogSnapshot {
 }
 
 type LogLevel = "all" | "ERROR" | "WARN" | "INFO";
+const MAX_VISIBLE_LOG_LINES = 1_000;
 
 interface Props {
   onClose: () => void;
@@ -22,7 +23,13 @@ export function LogsModal({ onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [level, setLevel] = useState<LogLevel>("all");
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedQuery(query), 200);
+    return () => window.clearTimeout(timeout);
+  }, [query]);
 
   const refresh = async () => {
     const startedAt = performance.now();
@@ -48,10 +55,12 @@ export function LogsModal({ onClose }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const lines = useMemo(() => (snapshot?.content ?? "").split(/\r?\n/).filter((line) => {
+  const matchingLines = useMemo(() => (snapshot?.content ?? "").split(/\r?\n/).filter((line) => {
     if (level !== "all" && !line.includes("[" + level + "]")) return false;
-    return line.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
-  }), [snapshot, level, query]);
+    return line.toLocaleLowerCase().includes(debouncedQuery.trim().toLocaleLowerCase());
+  }), [snapshot, level, debouncedQuery]);
+  const lines = useMemo(() => matchingLines.slice(-MAX_VISIBLE_LOG_LINES), [matchingLines]);
+  const omittedLineCount = matchingLines.length - lines.length;
 
   return <div className="modal-backdrop logs-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="logs-modal" role="dialog" aria-modal="true" aria-labelledby="logs-title">
@@ -69,8 +78,9 @@ export function LogsModal({ onClose }: Props) {
         <button type="button" className="command-button detail-refresh-button" aria-busy={loading} disabled={loading} onClick={() => void refresh()}><RefreshCw size={14} className={loading ? "refresh-spinning" : undefined} /> {loading ? t("refreshingLogs") : t("refreshLogs")}</button>
       </div>
       {error && <div className="logs-error" role="alert">{error}</div>}
-      {!snapshot && loading ? <div className="logs-message">{t("logsLoading")}</div> : snapshot && (lines.length ? <pre className="logs-content">{lines.map((line, index) => <span className={"log-line " + (line.includes("[ERROR]") ? "log-error" : line.includes("[WARN]") ? "log-warn" : "")} key={index + "-" + line}>{line}{"\n"}</span>)}</pre> : <div className="logs-message">{t("noLogs")}</div>)}
-      <footer className="logs-footer"><span>{t("logEntries", { count: lines.length })}</span><button type="button" className="command-button" onClick={onClose}>{t("close")}</button></footer>
+      {omittedLineCount > 0 && <p className="logs-description">{t("logLinesLimited", { shown: lines.length, total: matchingLines.length })}</p>}
+      {!snapshot && loading ? <div className="logs-message">{t("logsLoading")}</div> : snapshot && (matchingLines.length ? <pre className="logs-content">{lines.map((line, index) => <span className={"log-line " + (line.includes("[ERROR]") ? "log-error" : line.includes("[WARN]") ? "log-warn" : "")} key={index + "-" + line}>{line}{"\n"}</span>)}</pre> : <div className="logs-message">{t("noLogs")}</div>)}
+      <footer className="logs-footer"><span>{t("logEntries", { count: matchingLines.length })}</span><button type="button" className="command-button" onClick={onClose}>{t("close")}</button></footer>
     </section>
   </div>;
 }

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::sync::Mutex;
 
 static OPERATIONS: Mutex<()> = Mutex::new(());
 
@@ -67,19 +67,32 @@ pub async fn set_blocked(
     blocked: bool,
 ) -> Result<bool, String> {
     run_blocking(move || {
-        let entry = crate::storage::ensure(&app, path)?;
         if blocked {
+            let canonical = crate::path_policy::canonical_local_executable(&path, true)?;
+            let entry = crate::storage::ensure(&app, canonical)?;
             crate::firewall::block(&entry.id, &entry.path)?;
-        } else {
-            crate::firewall::unblock(&entry.id)?;
+            let actual = crate::firewall::is_blocked(&entry.id)?;
+            if !actual {
+                return Err("Windows Firewall did not confirm the requested state.".into());
+            }
+            crate::logging::info(
+                "firewall",
+                &format!("Network access set to blocked=true for {}", entry.id),
+            );
+            return Ok(actual);
         }
+
+        let Some(entry) = crate::storage::find_by_path(&app, &path)? else {
+            return Ok(false);
+        };
+        crate::firewall::unblock(&entry.id)?;
         let actual = crate::firewall::is_blocked(&entry.id)?;
-        if actual != blocked {
+        if actual {
             return Err("Windows Firewall did not confirm the requested state.".into());
         }
         crate::logging::info(
             "firewall",
-            &format!("Network access set to blocked={blocked} for {}", entry.id),
+            &format!("Network access set to blocked=false for {}", entry.id),
         );
         Ok(actual)
     })
@@ -91,12 +104,13 @@ pub async fn initialize_session(
     app: tauri::AppHandle,
 ) -> Result<crate::recovery::StartupRecoveryReport, String> {
     run_blocking(move || {
-        let entries = crate::storage::load(&app)?;
-        let report = crate::recovery::recover_entries(
-            &entries,
+        let loaded = crate::storage::load_with_status(&app)?;
+        let mut report = crate::recovery::recover_entries(
+            &loaded.entries,
             crate::firewall::is_blocked,
             crate::firewall::unblock,
         );
+        report.configuration_recovered = loaded.recovered_from_backup;
         crate::logging::info(
             "recovery",
             &format!(
@@ -156,19 +170,7 @@ pub async fn unblock_all(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub async fn add_executable(app: tauri::AppHandle, path: String) -> Result<(), String> {
     run_blocking(move || {
-        let path_ref = PathBuf::from(&path);
-        if !path_ref.is_file()
-            || path_ref
-                .extension()
-                .is_none_or(|extension| !extension.eq_ignore_ascii_case("exe"))
-        {
-            return Err("Select an existing .exe file.".into());
-        }
-        let canonical = path_ref
-            .canonicalize()
-            .map_err(|error| format!("Could not resolve executable path: {error}"))?
-            .to_string_lossy()
-            .to_string();
+        let canonical = crate::path_policy::canonical_local_executable(&path, false)?;
         crate::storage::add(&app, canonical.clone())?;
         crate::logging::info("storage", "Added executable entry");
         Ok(())

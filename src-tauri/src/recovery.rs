@@ -44,6 +44,7 @@ pub fn recover_entries(
 #[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StartupRecoveryReport {
+    pub configuration_recovered: bool,
     pub stale_paths: Vec<String>,
     pub restored_paths: Vec<String>,
     pub failures: Vec<RecoveryFailure>,

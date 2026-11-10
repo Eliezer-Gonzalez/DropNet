@@ -15,6 +15,7 @@ export const logTranslations = {
     noLogs: "No log entries match your filters.",
     logsLoadError: "Could not load DropNet logs.",
     logEntries: "{count} matching lines",
+    logLinesLimited: "Showing the latest {shown} of {total} matching lines.",
   },
   es: {
     logs: "Registros",
@@ -32,5 +33,6 @@ export const logTranslations = {
     noLogs: "Ningún registro coincide con los filtros.",
     logsLoadError: "No se pudieron cargar los registros de DropNet.",
     logEntries: "{count} líneas coincidentes",
+    logLinesLimited: "Se muestran las últimas {shown} de {total} líneas coincidentes.",
   },
 } as const;

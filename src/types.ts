@@ -12,6 +12,7 @@ export interface ProcessRow {
 }
 
 export interface StartupRecoveryReport {
+  configurationRecovered: boolean;
   stalePaths: string[];
   restoredPaths: string[];
   failures: Array<{ path: string; detail: string }>;
