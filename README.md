@@ -1,11 +1,14 @@
-# DropNet
-
-![Windows](https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white)
-![Tauri 2](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
-![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
-![Rust](https://img.shields.io/badge/backend-Rust-DEA584?logo=rust&logoColor=black)
-![Version](https://img.shields.io/badge/version-0.3.2-blue)
-![GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)
+<div align="center">
+  <h1>DropNet</h1>
+  <p>
+    <img src="https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white" alt="Windows">
+    <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
+    <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19">
+    <img src="https://img.shields.io/badge/backend-Rust-DEA584?logo=rust&logoColor=black" alt="Rust backend">
+    <img src="https://img.shields.io/badge/version-0.3.2-blue" alt="Version 0.3.2">
+    <img src="https://img.shields.io/badge/license-GPL--3.0--only-blue" alt="GPL-3.0-only">
+  </p>
+</div>
 
 **A small Windows utility for one job: block or restore internet access for a selected executable.**
 
@@ -60,7 +63,7 @@ Copyright © 2026 DestGM.
 
 ---
 
-# DropNet (español)
+<h2 align="center">DropNet (español)</h2>
 
 **Una pequeña herramienta para Windows que hace una sola tarea: bloquear o restablecer el acceso a internet de un ejecutable seleccionado.**
 
